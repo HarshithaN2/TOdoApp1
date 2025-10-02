@@ -1,0 +1,156 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+/**
+ * Simple To-Do list using Java Swing.
+ * Save as ToDoApp.java → compile & run:
+ *   javac ToDoApp.java
+ *   java ToDoApp
+ */
+public class ToDoApp {
+    private JFrame frame;
+    private DefaultListModel<String> listModel;
+    private JList<String> taskList;
+    private JTextField inputField;
+    private JButton addButton;
+    private JButton deleteButton;
+    private JButton clearButton;
+
+    public ToDoApp() {
+        initComponents();
+    }
+
+    private void initComponents() {
+        frame = new JFrame("To-Do List");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(420, 440);
+        frame.setLocationRelativeTo(null);
+
+        // Top input panel
+        JPanel topPanel = new JPanel(new BorderLayout(6, 6));
+        inputField = new JTextField();
+        inputField.setToolTipText("Type a task and press Enter or click Add");
+        addButton = new JButton("Add");
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        topPanel.add(inputField, BorderLayout.CENTER);
+        topPanel.add(addButton, BorderLayout.EAST);
+
+        // Center: task list with scroll
+        listModel = new DefaultListModel<>();
+        taskList = new JList<>(listModel);
+        taskList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        taskList.setVisibleRowCount(12);
+        JScrollPane scrollPane = new JScrollPane(taskList);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Tasks"));
+        scrollPane.setPreferredSize(new Dimension(380, 260));
+
+        // Bottom buttons
+        JPanel bottomPanel = new JPanel();
+        deleteButton = new JButton("Delete Selected");
+        clearButton = new JButton("Clear All");
+        bottomPanel.add(deleteButton);
+        bottomPanel.add(clearButton);
+
+        // Add components to frame
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(topPanel, BorderLayout.NORTH);
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+        frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+
+        // Actions
+        addButton.addActionListener(e -> addTask());
+        inputField.addActionListener(e -> addTask()); // press Enter in text field
+
+        deleteButton.addActionListener(e -> deleteSelectedTask());
+        clearButton.addActionListener(e -> clearAllTasks());
+
+        // Double-click to edit a task
+        taskList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int idx = taskList.locationToIndex(e.getPoint());
+                    if (idx >= 0) editTask(idx);
+                }
+            }
+        });
+
+        // Keyboard Delete key deletes selected
+        taskList.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    deleteSelectedTask();
+                }
+            }
+        });
+
+        frame.setVisible(true);
+    }
+
+    private void addTask() {
+        String text = inputField.getText().trim();
+        if (text.isEmpty()) {
+            // keep UX friendly
+            JOptionPane.showMessageDialog(frame, "Enter a non-empty task.", "Empty task", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        listModel.addElement(text);
+        inputField.setText("");
+        inputField.requestFocusInWindow();
+    }
+
+    private void deleteSelectedTask() {
+        int idx = taskList.getSelectedIndex();
+        if (idx >= 0) {
+            int confirm = JOptionPane.showConfirmDialog(frame,
+                    "Delete selected task?",
+                    "Confirm delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (confirm == JOptionPane.YES_OPTION) {
+                listModel.remove(idx);
+            }
+        } else {
+            JOptionPane.showMessageDialog(frame, "No task selected.", "Delete", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void clearAllTasks() {
+        if (listModel.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No tasks to clear.", "Clear All", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(frame,
+                "Clear all tasks?",
+                "Confirm clear",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm == JOptionPane.YES_OPTION) {
+            listModel.clear();
+        }
+    }
+
+    private void editTask(int index) {
+        String current = listModel.get(index);
+        String updated = (String) JOptionPane.showInputDialog(frame,
+                "Edit task:",
+                "Edit",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                current);
+        if (updated != null) {
+            updated = updated.trim();
+            if (!updated.isEmpty()) {
+                listModel.set(index, updated);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Task cannot be empty.", "Edit", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Ensure GUI on Event Dispatch Thread
+        SwingUtilities.invokeLater(ToDoApp::new);
+    }
+}
