@@ -1,13 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-
-/**
- * Simple To-Do list using Java Swing.
- * Save as ToDoApp.java → compile & run:
- *   javac ToDoApp.java
- *   java ToDoApp
- */
 public class ToDoApp {
     private JFrame frame;
     private DefaultListModel<String> listModel;
